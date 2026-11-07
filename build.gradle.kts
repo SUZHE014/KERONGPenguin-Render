@@ -37,6 +37,12 @@ tasks.processResources {
     }
 }
 
+// 瘦 JAR 加 -thin 后缀：避免与 shadowJar 同名互相覆盖
+// （smokeRender 等任务会连带执行普通 jar，曾把 fat JAR 悄悄覆盖成缺 kotlin 的瘦包）
+tasks.jar {
+    archiveClassifier.set("thin")
+}
+
 tasks.shadowJar {
     archiveBaseName.set("KERONGPenguin-Render")
     archiveClassifier.set("")
