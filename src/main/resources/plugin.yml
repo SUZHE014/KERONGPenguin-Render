@@ -1,0 +1,18 @@
+name: KERONGPenguinRender
+version: '${version}'
+main: cn.kerong.render.KrgRenderPlugin
+api-version: '1.18'
+folia-supported: true
+depend: [HuHoBotPenguin]
+softdepend: [Vault, DeluxeTags, PlayerPoints, PlaceholderAPI, spark]
+description: KERONGPenguin image rendering add-on for HuHoBotPenguin - info card, online list, performance, leaderboards
+author: KERONG
+commands:
+  hbkrg:
+    description: KERONGPenguin Render add-on control command
+    usage: "/hbkrg reload|info|mem|bpng|bpngsz|help"
+    permission: krgrender.command
+permissions:
+  krgrender.command:
+    description: Allows use of KERONGPenguin Render control commands
+    default: op

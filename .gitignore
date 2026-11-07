@@ -1,0 +1,14 @@
+.gradle/
+build/
+run/
+*.log
+.idea/
+*.iml
+.vscode/
+kotlin-js-store/
+# 编译依赖的主插件 JAR（体积大，按 README 自行下载到 libs/）
+libs/*.jar
+!libs/.gitkeep
+
+# 本机 JDK 路径等环境配置（用 gradle.properties.example 做模板）
+gradle.properties
