@@ -44,9 +44,6 @@ tasks.shadowJar {
     relocate("kotlin", "cn.kerong.render.libs.kotlin")
     relocate("kotlinx", "cn.kerong.render.libs.kotlinx")
     relocate("org.jetbrains.annotations", "cn.kerong.render.libs.annotations")
-    minimize {
-        exclude(dependency("org.jetbrains.kotlin:.*:.*"))
-    }
 }
 
 tasks.build {
