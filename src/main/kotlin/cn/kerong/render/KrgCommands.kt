@@ -18,7 +18,7 @@ import io.github.kloping.qqbot.entities.qqpd.User
  *
  * | 指令 | 卡片 | 与 HuHoBot 内置重名 |
  * |------|------|----------------------|
- * | 查信息 | 玩家生涯统计卡片 | 是（内置为 OpenId 文本查询） |
+ * | 玩家名片 | 玩家生涯统计卡片 | 否（原「查信息」，1.0.0 覆盖版更名——把「查信息」还给 HuHoBot 内置的 OpenId 查询，群成员可随时查自己的 / 群的 OpenId） |
  * | 查在线 / 在线 | 在线玩家列表卡片 | 是（内置为自带渲染 / MOTD 图） |
  * | 查性能 | 服务器性能监控卡片 | 否 |
  * | 在线排行榜 | 总在线时长排行 | 否 |
@@ -30,20 +30,11 @@ import io.github.kloping.qqbot.entities.qqpd.User
  */
 class KrgCommands : BaseCommand() {
 
-    /** /查信息 —— 玩家生涯统计卡片（绑定玩家数据；@成员 可查他人）。 */
-    @Commands(command = "查信息", describe = "查询玩家生涯统计卡片")
+    /** /玩家名片 —— 玩家生涯统计卡片（HuHoBot 原生绑定玩家；@成员 可查他人）。 */
+    @Commands(command = "玩家名片", describe = "查询玩家生涯统计卡片")
     fun queryPersonalInfo(api: HuHoBot, event: GroupMessageEvent, params: String) {
-        if (!ownCommandEnabled("查信息")) {
+        if (!ownCommandEnabled("玩家名片")) {
             MessageTemplates.sendDirect(event, "command-disabled")
-            return
-        }
-        val bridge = try {
-            BindBridge.getInstance()
-        } catch (_: Throwable) {
-            null
-        }
-        if (bridge == null) {
-            MessageTemplates.sendDirect(event, "manager-not-ready-bind-retry")
             return
         }
         val qq = try {
@@ -61,7 +52,7 @@ class KrgCommands : BaseCommand() {
         if (mentioned != null) {
             val targetId = mentioned.firstOrNull() ?: return
             val targetName = mentioned.getOrNull(1) ?: targetId
-            if (BindBridge.findPlayerByQq(targetId) == null) {
+            if (!BindBridge.isBound(targetId)) {
                 MessageTemplates.sendDirect(event, "info-target-not-bound", mapOf("name" to targetName))
                 return
             }
@@ -194,13 +185,14 @@ class KrgCommands : BaseCommand() {
     }
 
     companion object {
-        /** 重名接管族：开关键 → 受控指令列表（查在线 含别名 在线）。 */
+        /** 重名接管族：开关键 → 受控指令列表（查在线 含别名 在线）。
+         *  1.0.0 覆盖版移除「查信息」族——附属玩家卡片更名「玩家名片」后，
+         *  「查信息」完全交回 HuHoBot 内置（查 OpenId），不再有命名冲突。 */
         val OVERRIDE_FAMILIES: List<Pair<String, List<String>>> = listOf(
             "查在线" to listOf("查在线", "在线"),
-            "查信息" to listOf("查信息"),
         )
 
         /** 本处理器全部指令名。 */
-        val ALL_KEYS: List<String> = listOf("查信息", "查在线", "在线", "查性能", "在线排行榜", "财富榜")
+        val ALL_KEYS: List<String> = listOf("玩家名片", "查在线", "在线", "查性能", "在线排行榜", "财富榜")
     }
 }

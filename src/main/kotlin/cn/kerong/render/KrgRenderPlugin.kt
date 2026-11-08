@@ -24,16 +24,16 @@ import java.io.File
 /**
  * KERONGPenguin-Render —— KERONGPenguin 图片渲染功能的 HuHoBot 附属。
  *
- * 把 KERONGPenguin 主线版的五张图片卡片（查信息 / 查在线 / 查性能 /
+ * 把 KERONGPenguin 主线版的五张图片卡片（玩家名片 / 查在线 / 查性能 /
  * 在线排行榜 / 财富榜）及其图片包下载、渲染配置、面板同步带到
  * HuHoBotPenguin 体系：
  * - QQ 侧指令经 [cn.kerong.render.KrgCommands]（HuHoBot BaseCommand 子类）
  *   注入 HuHoBot 的群消息分发链，最优先匹配，可按配置接管与 HuHoBot
- *   内置重名的指令（查在线 / 查信息，默认本附属接管）；
+ *   内置重名的指令（查在线，默认本附属接管）；
  * - 图片经 kloping SDK MessageChain base64 直传被动回复，不占群主动消息配额；
- * - 玩家数据（统计 / 排行）由附属自管理（stats/ 目录），支持从
- *   KERONGPenguin 的 QUUID 历史数据一键导入；
- * - QQ 绑定关系复用 HuHoBot 自己的绑定系统。
+ * - 玩家数据（统计 / 排行）由附属自管理（stats/ 目录）；
+ * - QQ 绑定关系完全复用 HuHoBot 原生绑定系统（/绑定 命令，
+ *   附属不自建绑定 / 迁移体系，绑定数据直读 HuHoBot 仓库）。
  */
 class KrgRenderPlugin : JavaPlugin() {
 
@@ -58,11 +58,8 @@ class KrgRenderPlugin : JavaPlugin() {
         // 3. 消息模板释放（Markdown/ 目录，不覆盖已有）
         MessageTemplates.initialize()
 
-        // 4. 玩家统计记录器（/查信息、/在线排行榜 数据源）
+        // 4. 玩家统计记录器（/玩家名片、/在线排行榜 数据源）
         PlayerStatsManager.initialize()
-
-        // 5. KERONGPenguin 历史数据导入（存在 QUUID 目录时一次性执行）
-        cn.kerong.render.migration.KerongImportService.runIfLegacyPresent(this)
 
         // 6. 渲染相关后台组件
         InfoCardAssets.ensureAvatarSweeper()
@@ -151,7 +148,7 @@ class KrgRenderPlugin : JavaPlugin() {
         PlayerStatsManager.saveToDiskAsync()
         injected = HuHoBridge.ensureCommandInjection(this)
         lines.add(
-            if (injected) "指令接管已重新应用（查信息 / 查在线 / 查性能 / 在线排行榜 / 财富榜）"
+            if (injected) "指令接管已重新应用（玩家名片 / 查在线 / 查性能 / 在线排行榜 / 财富榜）"
             else "指令接管注入失败：重名指令将由 HuHoBot 内置行为回复（详见控制台日志）"
         )
         val panelResult = HuHoBridge.resyncPanels()

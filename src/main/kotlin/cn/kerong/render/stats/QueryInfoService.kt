@@ -19,10 +19,11 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
- * /查信息（1.5.2 前名为 /个人信息）命令服务：QQ → 玩家 UUID → 数据组装 → 卡片渲染 → 图片发送。
+ * /玩家名片（原 /查信息；KERONGPenguin 侧 1.5.2 前名为 /个人信息）命令服务：
+ * QQ → 玩家 UUID → 数据组装 → 卡片渲染 → 图片发送。
  *
  * 流程：
- * 1. 通过 QQ OpenId 查找绑定的玩家（未绑定则直接提示；1.5.3 支持 `/查信息 @成员`
+ * 1. 通过 QQ OpenId 查找绑定的玩家（未绑定则直接提示；1.5.3 支持 `/玩家名片 @成员`
  *    查询他人，未绑定时指明是谁未绑定）；
  * 2. 汇总数据：金币（Vault）、称号（0.1.5.5 默认 DeluxeTags，含颜色码）、
  *    在线时长与今日在线（本插件自记录）、累计签到（本插件签到系统）、点券（PlayerPoints）、
@@ -37,7 +38,7 @@ import java.util.concurrent.TimeUnit
  * - 依赖插件缺失隐藏统计项：Vault（金币）/ DeluxeTags+Vault（称号）/ PlayerPoints（点券）
  *   任一未安装或未启用（含经济服务未注册）时对应项不渲染，签到未开启同理；
  *   卡片高度随实际项数自适应（满项 760，少一行减 96px），背景按实际高度处理；
- * - 查询他人：`/查信息 @成员` 渲染该成员绑定玩家的卡片，冷却按查询发起者计。
+ * - 查询他人：`/玩家名片 @成员` 渲染该成员绑定玩家的卡片，冷却按查询发起者计。
  *
  * 1.5.1：
  * - 全链路异步：机器人消息线程只做冷却判断，绑定查找（磁盘 IO）、统计 / 称号 /
@@ -126,7 +127,7 @@ object QueryInfoService {
      * 全流程异步执行（1.5.1）：机器人消息线程仅做冷却判断，
      * 绑定查找、数据采集、渲染与发送全部在共享渲染池完成。
      *
-     * 1.5.3：支持查询他人——`/查信息 @成员` 时 [qqOpenId] 为发起查询者（冷却接其计），
+     * 1.5.3：支持查询他人——`/玩家名片 @成员` 时 [qqOpenId] 为发起查询者（冷却接其计），
      * [targetOpenId] 为被查询成员（未绑定则提示该成员先完成绑定）；
      * 不传 [targetOpenId] 时行为与旧版一致（查询自己）。
      *
@@ -162,27 +163,15 @@ object QueryInfoService {
             // 共享渲染池（CardRenderPool：硬编码核数一半 1..4 线程；完成后自动节流 GC）
             CardRenderPool.submit {
                 try {
-                    // 1. 查找绑定的玩家（HuHoBot 绑定仓库内存查询 + UUID 解析，
-                    //    解析失败时可回退磁盘，渲染池线程执行不阻塞消息线程）
-                    val bindManager = try {
-                        BindBridge.getInstance()
-                    } catch (_: Throwable) {
-                        null
-                    }
-                    if (bindManager == null) {
-                        cn.kerong.render.qqbind.MessageTemplates.sendPlain(event, "manager-not-ready-bind-retry")
-                        return@submit
-                    }
+                    // 1. 查找绑定的玩家（HuHoBot 原生绑定仓库直读 + UUID 解析，
+                    //    渲染池线程执行不阻塞消息线程）
                     if (targetOpenId != null) {
                         PluginFileLog.write(
-                            "[查信息] ${qqOpenId} 查询 ${targetName ?: targetOpenId}（${targetOpenId}）的玩家信息"
+                            "[玩家名片] ${qqOpenId} 查询 ${targetName ?: targetOpenId}（${targetOpenId}）的玩家信息"
                         )
                     }
-                    val playerName: String?
-                    val quuid: String?
-                    playerName = bindManager.findPlayerByQq(lookupOpenId)
-                    quuid = bindManager.findQuuidByQq(lookupOpenId)
-                    if (playerName.isNullOrEmpty() || quuid.isNullOrEmpty()) {
+                    val playerName = BindBridge.findPlayerByQq(lookupOpenId)
+                    if (playerName.isNullOrEmpty()) {
                         // 1.5.3：查询他人未绑定时指明是谁未绑定，避免误以为查询者自己未绑定
                         if (targetName != null) {
                             cn.kerong.render.qqbind.MessageTemplates.sendPlain(
@@ -195,7 +184,7 @@ object QueryInfoService {
                         }
                         return@submit
                     }
-                    val playerUuid: UUID? = parseUuid(BindBridge.getPlayerUuidByQuuid(quuid))
+                    val playerUuid: UUID? = BindBridge.findUuidByQq(lookupOpenId)
 
                     // 2. TTL 内同一玩家直接复用上次渲染的 PNG，零渲染开销秒回
                     val cacheKey = playerUuid?.toString() ?: playerName
@@ -229,7 +218,7 @@ object QueryInfoService {
                     val items = buildItems(snapshot, checkinTotalText)
                     val cardHeight = InfoCardRenderer.cardHeight(items.size)
                     PluginFileLog.write(
-                        "[查信息] 统计项 ${items.size} 项（金币=${if (snapshot.vaultAvailable) "展示" else if (snapshot.vars.coinsConfigured) "展示-变量" else "隐藏-Vault未装"}" +
+                        "[玩家名片] 统计项 ${items.size} 项（金币=${if (snapshot.vaultAvailable) "展示" else if (snapshot.vars.coinsConfigured) "展示-变量" else "隐藏-Vault未装"}" +
                             " 称号=${if (snapshot.titleAvailable) "展示" else if (snapshot.vars.titleConfigured) "展示-变量" else "隐藏-无来源插件"}" +
                             " 点券=${if (snapshot.pointsAvailable) "展示" else if (snapshot.vars.pointsConfigured) "展示-变量" else "隐藏-PlayerPoints未装"}" +
                             " 签到=隐藏-附属无签到" +
@@ -289,9 +278,9 @@ object QueryInfoService {
                 } catch (error: Throwable) {
                     // 失败日志带堆栈前几帧且双写日志文件，事后可从
                     // logs/qq/qq-bind-日期.log 追溯具体失败原因
-                    plugin.log_error("[查信息] 渲染卡片失败: ${error.message}")
+                    plugin.log_error("[玩家名片] 渲染卡片失败: ${error.message}")
                     plugin.log_error(
-                        "[查信息] 失败堆栈: " +
+                        "[玩家名片] 失败堆栈: " +
                             error.stackTraceToString().lineSequence().take(8).joinToString(" | ")
                     )
                     cn.kerong.render.qqbind.MessageTemplates.sendPlain(event, "info-render-failed")

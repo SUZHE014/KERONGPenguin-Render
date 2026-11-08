@@ -14,7 +14,7 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.raid.RaidTriggerEvent
 
 /**
- * 玩家统计事件监听（/查信息 卡片与 /在线排行榜 的数据采集端）——
+ * 玩家统计事件监听（/玩家名片 卡片与 /在线排行榜 的数据采集端）——
  * 自 KERONGPenguin 1.7.4 原样移植。
  *
  * 采集策略（低开销）：

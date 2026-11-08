@@ -481,32 +481,6 @@ object PlayerStatsManager {
         }
     }
 
-    // ---------- KERONGPenguin 数据导入 ----------
-
-    /**
-     * 导入一条 KERONGPenguin 历史统计（迁移服务调用）：仅当本附属尚无
-     * 该玩家记录，或已有记录的 play-seconds 小于导入值时覆盖合并
-     * （取两侧各字段最大值，保证导入不丢新数据、新数据不被旧值覆盖）。
-     */
-    fun importRecord(playerName: String, playerUuid: UUID, imported: PlayerStats) {
-        if (playerName.isBlank()) return
-        recordName(playerUuid, playerName)
-        val current = loadOrCreate(playerUuid)
-        current.playSeconds = maxOf(current.playSeconds, imported.playSeconds)
-        current.mobKills = maxOf(current.mobKills, imported.mobKills)
-        current.dragonKills = maxOf(current.dragonKills, imported.dragonKills)
-        current.playerKills = maxOf(current.playerKills, imported.playerKills)
-        current.deaths = maxOf(current.deaths, imported.deaths)
-        current.fishCaught = maxOf(current.fishCaught, imported.fishCaught)
-        current.ancientDebris = maxOf(current.ancientDebris, imported.ancientDebris)
-        current.raidTriggers = maxOf(current.raidTriggers, imported.raidTriggers)
-        current.animalsBred = maxOf(current.animalsBred, imported.animalsBred)
-        current.walkCm = maxOf(current.walkCm, imported.walkCm)
-        current.flyCm = maxOf(current.flyCm, imported.flyCm)
-        current.damageDealt = maxOf(current.damageDealt, imported.damageDealt)
-        markDirty(playerUuid)
-    }
-
     // ---------- stats 节读写 ----------
 
     /** 从统计文件的 stats 节读出统计。 */

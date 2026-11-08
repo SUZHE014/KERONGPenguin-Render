@@ -16,7 +16,7 @@ import cn.kerong.render.KrgRenderPlugin
  * （内置 PublicCommands 排第一），命中即消费；QQ 指令面板与 /帮助 也从
  * 同一列表构建（重名去重取先出现者）。因此附属的 [KrgCommands] 通过反射
  * **插到列表第 0 位**实现接管：
- * - 分发：附属先于内置匹配 → 重名指令（查在线 / 查信息）由附属回复；
+ * - 分发：附属先于内置匹配 → 重名指令（查在线）由附属回复；
  * - 面板：去重时附属条目胜出（名称 + 附属描述）；
  * - 关闭接管（override-commands 配置 false）时从指令表摘除对应条目，
  *   消息自然回落到 HuHoBot 内置行为。
@@ -71,7 +71,7 @@ object HuHoBridge {
             bot.registerAddon(
                 ADDON_NAME,
                 plugin.description.version,
-                "KERONGPenguin 图片渲染附属（查信息 / 查在线 / 查性能 / 排行榜）",
+                "KERONGPenguin 图片渲染附属（玩家名片 / 查在线 / 查性能 / 排行榜）",
                 "KERONG",
             )
             plugin.logger.info("已在 HuHoBot 扩展中心登记：$ADDON_NAME")
@@ -110,7 +110,7 @@ object HuHoBridge {
             // 应用 / 重应用重名接管开关（重载配置后即时生效）
             applyOverrideSwitches(plugin, handler)
             if (lastInjectionState != true) {
-                plugin.logger.info("QQ 指令已注入 HuHoBot 分发链（查信息 / 查在线 / 在线 / 查性能 / 在线排行榜 / 财富榜）")
+                plugin.logger.info("QQ 指令已注入 HuHoBot 分发链（玩家名片 / 查在线 / 在线 / 查性能 / 在线排行榜 / 财富榜）")
                 resyncPanels()
             }
             lastInjectionState = true

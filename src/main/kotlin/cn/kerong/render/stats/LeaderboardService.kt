@@ -344,7 +344,7 @@ object LeaderboardService {
         }
     }
 
-    /** 金额显示（整数去掉小数点，与查信息卡片同风格）。 */
+    /** 金额显示（整数去掉小数点，与玩家名片卡片同风格）。 */
     private fun formatMoney(amount: Double): String =
         if (amount == amount.toLong().toDouble()) amount.toLong().toString() else amount.toString()
 
